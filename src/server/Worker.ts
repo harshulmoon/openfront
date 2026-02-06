@@ -48,37 +48,34 @@ export async function startWorker() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  const app = express()
-  
-      const corsOptions: cors.CorsOptions = {
+  const app = express();
+
+  app.set("trust proxy", 3);
+
+  const corsOptions: CorsOptions = {
     origin: [
       "https://openfront-production-9abe.up.railway.app",
       "http://localhost:5173",
     ],
-    credentials: true, // only if you use cookies/auth that needs credentials
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
   };
 
-  // CORS must come BEFORE routes/static/rate limit
   app.use(cors(corsOptions));
   app.options("*", cors(corsOptions));
 
   app.use(compression());
   app.use(express.json());
 
-  // then your static, /maps, /api routes, etc...
-}
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
-  app.set("trust proxy", 3);
-
   const gm = new GameManager(config, log);
-
-  // Initialize lobby service (handles WebSocket upgrade routing)
   const lobbyService = new WorkerLobbyService(server, wss, gm, log);
 
+  // ...rest of your code
+}
   setTimeout(
     () => {
       startMatchmakingPolling(gm);

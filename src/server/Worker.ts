@@ -101,30 +101,23 @@ export async function startWorker() {
   app.use(compression());
   app.use(express.json());
 
-  // Configure MIME types for webp files
-  express.static.mime.define({ "image/webp": ["webp"] });
+const distDir = path.join(process.cwd(), "dist");
 
-  const distDir = path.join(__dirname, "../../dist");
+// Serve built Vite output
 app.use(express.static(distDir));
 
-// SPA fallback so deep links work
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
-    return next();
-  }
-  return res.sendFile(path.join(distDir, "index.html"));
-});
-  app.use(
-    "/maps",
-    express.static(path.join(__dirname, "../../static/maps"), {
-      maxAge: "1y",
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith(".webp")) {
-          res.setHeader("Content-Type", "image/webp");
-        }
-      },
-    }),
-  );
+// Serve maps (must come before SPA fallback)
+app.use(
+  "/maps",
+  express.static(path.join(__dirname, "../../static/maps"), {
+    maxAge: "1y",
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".webp")) {
+        res.setHeader("Content-Type", "image/webp");
+      }
+    },
+  }),
+);
   app.use(
     rateLimit({
       windowMs: 1000, // 1 second
@@ -476,6 +469,18 @@ app.get("*", (req, res, next) => {
     log.info(`signaled ready state to master`);
   });
 
+   // SPA fallback (must be before the global error handler)
+  app.get("*", (req, res, next) => {
+    if (
+      req.path.startsWith("/api") ||
+      req.path.startsWith("/maps") ||
+      req.path.startsWith("/w")
+    ) {
+      return next();
+    }
+    return res.sendFile(path.join(distDir, "index.html"));
+  });
+  
   // Global error handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     log.error(`Error in ${req.method} ${req.path}:`, err);

@@ -108,13 +108,6 @@ export async function startWorker() {
 
 app.use(express.static(webDir));
 
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
-    return next();
-  }
-  return res.sendFile(path.join(webDir, "index.html"));
-});
-
 // ...
 
 log.info(`CWD=${process.cwd()}`);
@@ -488,17 +481,7 @@ server.listen(PORT, "0.0.0.0", () => {
     log.info(`signaled ready state to master`);
   });
 
-   // SPA fallback (must be before the global error handler)
-  app.get("*", (req, res, next) => {
-    if (
-      req.path.startsWith("/api") ||
-      req.path.startsWith("/maps") ||
-      req.path.startsWith("/w")
-    ) {
-      return next();
-    }
-    return res.sendFile(path.join(webDir, "index.html"));
-  });
+   // SPA fallback (must be before the global error handler
   
   // Global error handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -568,17 +551,16 @@ async function startMatchmakingPolling(gm: GameManager) {
       } catch (error) {
         log.error(`Error polling lobby:`, error);
       }
+        app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
+      return next();
+    }
+    return res.sendFile(path.join(webDir, "index.html"));
+  })
     },
     5000 + Math.random() * 1000,
   );
 }
-
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
-    return next();
-  }
-  return res.sendFile(path.join(webDir, "index.html"));
-});
 
 // TODO: This is a hack to generate a game ID for the worker.
 // It should be replaced with a more robust solution.

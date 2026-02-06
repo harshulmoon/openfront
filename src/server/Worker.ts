@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import cors, { type CorsOptions } from "cors";
 import compression from "compression";
 import express, { NextFunction, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -47,16 +48,9 @@ export async function startWorker() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  const app = express();
-  const server = http.createServer(app);
-  const wss = new WebSocketServer({ noServer: true });
-
-  export async function startWorker() {
-  const app = express();
-
-  app.set("trust proxy", 3);
-
-  const corsOptions: cors.CorsOptions = {
+  const app = express()
+  
+      const corsOptions: cors.CorsOptions = {
     origin: [
       "https://openfront-production-9abe.up.railway.app",
       "http://localhost:5173",
@@ -75,6 +69,10 @@ export async function startWorker() {
 
   // then your static, /maps, /api routes, etc...
 }
+  const server = http.createServer(app);
+  const wss = new WebSocketServer({ noServer: true });
+
+  app.set("trust proxy", 3);
 
   const gm = new GameManager(config, log);
 

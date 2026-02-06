@@ -102,7 +102,16 @@ export async function startWorker() {
   app.use(compression());
   app.use(express.json());
 
-const distDir = path.join(process.cwd(), "dist");
+const webDir = path.join(process.cwd(), "static");
+
+app.use(express.static(webDir));
+
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
+    return next();
+  }
+  return res.sendFile(path.join(webDir, "index.html"));
+});
 
 // ...
 

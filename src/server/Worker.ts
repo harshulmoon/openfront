@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import cors, { type CorsOptions } from "cors";
 import compression from "compression";
 import express, { NextFunction, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -46,9 +48,31 @@ export async function startWorker() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  const app = express();
+  const app = express()
+  
+      const corsOptions: cors.CorsOptions = {
+    origin: [
+      "https://openfront-production-9abe.up.railway.app",
+      "http://localhost:5173",
+    ],
+    credentials: true, // only if you use cookies/auth that needs credentials
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  };
+
+  // CORS must come BEFORE routes/static/rate limit
+  app.use(cors(corsOptions));
+  app.options("*", cors(corsOptions));
+
+  app.use(compression());
+  app.use(express.json());
+
+  // then your static, /maps, /api routes, etc...
+}
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
+
+  app.set("trust proxy", 3);
 
   const gm = new GameManager(config, log);
 
@@ -65,6 +89,10 @@ export async function startWorker() {
   if (config.otelEnabled()) {
     initWorkerMetrics(gm);
   }
+
+  const webDir = path.join(process.cwd(), "static");
+  app.use(express.static(webDir));
+
 
   const privilegeRefresher = new PrivilegeRefresher(
     config.jwtIssuer() + "/cosmetics.json",
@@ -101,27 +129,38 @@ export async function startWorker() {
   app.use(compression());
   app.use(express.json());
 
-  // Configure MIME types for webp files
-  express.static.mime.define({ "image/webp": ["webp"] });
+app.use(express.static(webDir));
 
-  app.use(express.static(path.join(__dirname, "../../out")));
-  app.use(
-    "/maps",
-    express.static(path.join(__dirname, "../../static/maps"), {
-      maxAge: "1y",
-      setHeaders: (res, filePath) => {
-        if (filePath.endsWith(".webp")) {
-          res.setHeader("Content-Type", "image/webp");
-        }
-      },
-    }),
-  );
+// ...
+
+log.info(`CWD=${process.cwd()}`);
+log.info(`distDir=${distDir}`);
+log.info(`dist exists=${fs.existsSync(distDir)}`);
+log.info(`dist index exists=${fs.existsSync(path.join(distDir, "index.html"))}`);
+
+// Serve built Vite output
+app.use(express.static(distDir));
+
+// Serve maps (must come before SPA fallback)
+app.use(
+  "/maps",
+  express.static(path.join(__dirname, "../../static/maps"), {
+    maxAge: "1y",
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".webp")) {
+        res.setHeader("Content-Type", "image/webp");
+      }
+    },
+  }),
+);
   app.use(
     rateLimit({
       windowMs: 1000, // 1 second
       max: 20, // 20 requests per IP per second
     }),
   );
+
+  const distDir = path.join(__dirname, "../../dist"); // -> /app/dist when running from /app/src/server
 
   app.post("/api/create_game/:id", async (req, res) => {
     const id = req.params.id;
@@ -458,8 +497,8 @@ export async function startWorker() {
   });
 
   // The load balancer will handle routing to this server based on path
-  const PORT = config.workerPortByIndex(workerId);
-  server.listen(PORT, () => {
+  const PORT = Number(process.env.PORT) || 3000;
+server.listen(PORT, "0.0.0.0", () => {
     log.info(`running on http://localhost:${PORT}`);
     log.info(`Handling requests with path prefix /w${workerId}/`);
     // Signal to the master process that this worker is ready
@@ -467,6 +506,8 @@ export async function startWorker() {
     log.info(`signaled ready state to master`);
   });
 
+   // SPA fallback (must be before the global error handler
+  
   // Global error handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     log.error(`Error in ${req.method} ${req.path}:`, err);
@@ -481,7 +522,6 @@ export async function startWorker() {
   process.on("unhandledRejection", (reason, promise) => {
     log.error(`unhandled rejection at:`, promise, "reason:", reason);
   });
-}
 
 async function startMatchmakingPolling(gm: GameManager) {
   startPolling(
@@ -535,6 +575,12 @@ async function startMatchmakingPolling(gm: GameManager) {
       } catch (error) {
         log.error(`Error polling lobby:`, error);
       }
+        app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
+      return next();
+    }
+    return res.sendFile(path.join(webDir, "index.html"));
+  })
     },
     5000 + Math.random() * 1000,
   );

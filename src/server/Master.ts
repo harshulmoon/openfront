@@ -143,7 +143,7 @@ app.get("/api/env", async (req, res) => {
   if (!envConfig.game_env) return res.sendStatus(500);
   res.json(envConfig);
 });
-
+}
 // SPA fallback route
 app.get("*", async function (_req, res) {
   try {

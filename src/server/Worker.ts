@@ -51,6 +51,31 @@ export async function startWorker() {
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
+  export async function startWorker() {
+  const app = express();
+
+  app.set("trust proxy", 3);
+
+  const corsOptions: cors.CorsOptions = {
+    origin: [
+      "https://openfront-production-9abe.up.railway.app",
+      "http://localhost:5173",
+    ],
+    credentials: true, // only if you use cookies/auth that needs credentials
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  };
+
+  // CORS must come BEFORE routes/static/rate limit
+  app.use(cors(corsOptions));
+  app.options("*", cors(corsOptions));
+
+  app.use(compression());
+  app.use(express.json());
+
+  // then your static, /maps, /api routes, etc...
+}
+
   const gm = new GameManager(config, log);
 
   // Initialize lobby service (handles WebSocket upgrade routing)
@@ -136,6 +161,8 @@ app.use(
       max: 20, // 20 requests per IP per second
     }),
   );
+
+  const distDir = path.join(__dirname, "../../dist"); // -> /app/dist when running from /app/src/server
 
   app.post("/api/create_game/:id", async (req, res) => {
     const id = req.params.id;

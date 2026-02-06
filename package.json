@@ -1,6 +1,14 @@
 {
   "name": "openfront-client",
   "scripts": {
+    "build": "npm run build-prod",
+    "start": "npm run start:server",
+    "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
+    "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\"",
+    "start:client": "vite",
+    "start:server": "tsx src/server/Server.ts",
+    "start:server-dev": "cross-env GAME_ENV=dev tsx src/server/Server.ts",
+    "dev": "cross-env GAME_ENV=dev concurrently \"npm run start:client\" \"npm run start:server-dev\""
     "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
     "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\"",
     "start:client": "vite",

@@ -1,7 +1,7 @@
 {
   "name": "openfront-client",
 "scripts": {
-  "build": "npm run build-prod",
+   "build": "vite build",
   "start": "npm run start:server",
 
   "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",

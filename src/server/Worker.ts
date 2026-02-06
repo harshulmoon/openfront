@@ -102,6 +102,15 @@ export async function startWorker() {
   app.use(express.json());
 
 const distDir = path.join(process.cwd(), "dist");
+  
+  import fs from "fs";
+
+// ...
+
+log.info(`CWD=${process.cwd()}`);
+log.info(`distDir=${distDir}`);
+log.info(`dist exists=${fs.existsSync(distDir)}`);
+log.info(`dist index exists=${fs.existsSync(path.join(distDir, "index.html"))}`);
 
 // Serve built Vite output
 app.use(express.static(distDir));

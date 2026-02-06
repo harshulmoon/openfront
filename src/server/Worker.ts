@@ -564,7 +564,7 @@ async function startMatchmakingPolling(gm: GameManager) {
         }
       } catch (error) {
         log.error(`Error polling lobby:`, error);
-    },
+    };
     5000 + Math.random() * 1000,
   );
 }

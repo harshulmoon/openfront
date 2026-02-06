@@ -102,7 +102,7 @@ export async function startWorker() {
   app.use(compression());
   app.use(express.json());
 
-const webDir = path.join(process.cwd(), "static");
+const webDir = app.use(express.static(webDir));
 
 app.use(express.static(webDir));
 
@@ -495,7 +495,7 @@ server.listen(PORT, "0.0.0.0", () => {
     ) {
       return next();
     }
-    return res.sendFile(path.join(distDir, "index.html"));
+    return res.sendFile(path.join(webDir, "index.html"));
   });
   
   // Global error handler

@@ -517,7 +517,7 @@ async function startMatchmakingPolling(gm: GameManager) {
   startPolling(
     async () => {
       try {
-        const url = `${config.jwtIssuer() + "/matchmaking/checkin"}`;
+        const url = `${config.jwtIssuer()}/matchmaking/checkin`;
         const gameId = generateGameIdForWorker();
         if (gameId === null) {
           log.warn(`Failed to generate game ID for worker ${workerId}`);
@@ -526,6 +526,7 @@ async function startMatchmakingPolling(gm: GameManager) {
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
+
         const response = await fetch(url, {
           method: "POST",
           headers: {
@@ -544,11 +545,8 @@ async function startMatchmakingPolling(gm: GameManager) {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          log.warn(
-            `Failed to poll lobby: ${response.status} ${response.statusText}`,
-          );
+          log.warn(`Failed to poll lobby: ${response.status} ${response.statusText}`);
           return;
-        }
 
         const data = await response.json();
         log.info(`Lobby poll successful:`, data);
@@ -556,18 +554,15 @@ async function startMatchmakingPolling(gm: GameManager) {
         if (data.assignment) {
           const gameConfig = playlist.get1v1Config();
           const game = gm.createGame(gameId, gameConfig);
-          setTimeout(() => {
-            // Wait a few seconds to allow clients to connect.
-            console.log(`Starting game ${gameId}`);
-            game.start();
-          }, 7000);
+          setTimeout(() => game.start(), 7000);
         }
       } catch (error) {
         log.error(`Error polling lobby:`, error);
-    };
+      }
+    },
     5000 + Math.random() * 1000,
+  );
 }
-
 // TODO: This is a hack to generate a game ID for the worker.
 // It should be replaced with a more robust solution.
 function generateGameIdForWorker(): GameID | null {

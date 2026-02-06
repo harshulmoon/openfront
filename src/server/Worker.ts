@@ -564,13 +564,6 @@ async function startMatchmakingPolling(gm: GameManager) {
         }
       } catch (error) {
         log.error(`Error polling lobby:`, error);
-      }
-        app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
-      return next();
-    }
-    return res.sendFile(path.join(webDir, "index.html"));
-  })
     },
     5000 + Math.random() * 1000,
   );

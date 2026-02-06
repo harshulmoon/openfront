@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import compression from "compression";
 import express, { NextFunction, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
@@ -102,8 +103,6 @@ export async function startWorker() {
   app.use(express.json());
 
 const distDir = path.join(process.cwd(), "dist");
-  
-  import fs from "fs";
 
 // ...
 
@@ -469,8 +468,8 @@ app.use(
   });
 
   // The load balancer will handle routing to this server based on path
-  const PORT = config.workerPortByIndex(workerId);
-  server.listen(PORT, () => {
+  const PORT = Number(process.env.PORT) || 3000;
+server.listen(PORT, "0.0.0.0", () => {
     log.info(`running on http://localhost:${PORT}`);
     log.info(`Handling requests with path prefix /w${workerId}/`);
     // Signal to the master process that this worker is ready

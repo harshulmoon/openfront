@@ -131,12 +131,11 @@ export async function startMaster() {
     );
   });
 
-const PORT = Number(process.env.PORT) || 3000;
-server.listen(PORT, "0.0.0.0", () => ...
-    log.info(`Master HTTP server listening on port ${PORT}`);
-  });
-}
-
+const port = Number(process.env.PORT) || 3000;
+server.listen(port, "0.0.0.0", () => {
+  console.log(`Master HTTP server listening on port ${port}`);
+});
+  
 app.get("/api/env", async (req, res) => {
   const envConfig = {
     game_env: process.env.GAME_ENV,

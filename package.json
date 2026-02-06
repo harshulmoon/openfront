@@ -1,33 +1,29 @@
 {
   "name": "openfront-client",
-"scripts": {
-   "build": "vite build",
-  "start": "npm run start:server",
-
-  "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
-  "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\"",
-
-  "start:client": "vite",
-  "start:server": "tsx src/server/Server.ts",
-  "start:server-dev": "cross-env GAME_ENV=dev tsx src/server/Server.ts",
-
-  "dev": "cross-env GAME_ENV=dev concurrently \"npm run start:client\" \"npm run start:server-dev\"",
-  "dev:staging": "cross-env GAME_ENV=dev API_DOMAIN=api.openfront.dev concurrently \"npm run start:client\" \"npm run start:server-dev\"",
-  "dev:prod": "cross-env GAME_ENV=dev API_DOMAIN=api.openfront.io concurrently \"npm run start:client\" \"npm run start:server-dev\"",
-
-  "docs:map-generator": "cd map-generator && go doc -cmd -u -all",
-  "tunnel": "npm run build-prod && npm run start:server",
-  "test": "vitest run && vitest run tests/server",
-  "perf": "npx tsx tests/perf/*.ts",
-  "test:coverage": "vitest run --coverage",
-  "format": "prettier --ignore-unknown --write .",
-  "format:map-generator": "cd map-generator && go fmt .",
-  "lint": "eslint",
-  "lint:fix": "eslint --fix",
-  "prepare": "husky",
-  "gen-maps": "cd map-generator && go run . && npm run format",
-  "inst": "npm ci --ignore-scripts"
-},
+  "scripts": {
+    "build": "vite build",
+    "start": "npm run start:server",
+    "build-dev": "concurrently \"tsc --noEmit\" \"vite build --mode development\"",
+    "build-prod": "concurrently --kill-others-on-fail \"tsc --noEmit\" \"vite build\"",
+    "start:client": "vite",
+    "start:server": "tsx src/server/Server.ts",
+    "start:server-dev": "cross-env GAME_ENV=dev tsx src/server/Server.ts",
+    "dev": "cross-env GAME_ENV=dev concurrently \"npm run start:client\" \"npm run start:server-dev\"",
+    "dev:staging": "cross-env GAME_ENV=dev API_DOMAIN=api.openfront.dev concurrently \"npm run start:client\" \"npm run start:server-dev\"",
+    "dev:prod": "cross-env GAME_ENV=dev API_DOMAIN=api.openfront.io concurrently \"npm run start:client\" \"npm run start:server-dev\"",
+    "docs:map-generator": "cd map-generator && go doc -cmd -u -all",
+    "tunnel": "npm run build-prod && npm run start:server",
+    "test": "vitest run && vitest run tests/server",
+    "perf": "npx tsx tests/perf/*.ts",
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --ignore-unknown --write .",
+    "format:map-generator": "cd map-generator && go fmt .",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "prepare": "husky",
+    "gen-maps": "cd map-generator && go run . && npm run format",
+    "inst": "npm ci --ignore-scripts"
+  },
   "lint-staged": {
     "**/*": [
       "eslint --fix",
@@ -41,6 +37,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "@types/benchmark": "^2.1.5",
     "@types/chai": "^4.3.17",
+    "@types/cors": "^2.8.19",
     "@types/d3": "^7.4.3",
     "@types/express": "^4.17.23",
     "@types/google-protobuf": "^3.15.12",

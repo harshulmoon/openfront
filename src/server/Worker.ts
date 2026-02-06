@@ -104,7 +104,16 @@ export async function startWorker() {
   // Configure MIME types for webp files
   express.static.mime.define({ "image/webp": ["webp"] });
 
-  app.use(express.static(path.join(__dirname, "../../out")));
+  const distDir = path.join(__dirname, "../../dist");
+app.use(express.static(distDir));
+
+// SPA fallback so deep links work
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/maps") || req.path.startsWith("/w")) {
+    return next();
+  }
+  return res.sendFile(path.join(distDir, "index.html"));
+});
   app.use(
     "/maps",
     express.static(path.join(__dirname, "../../static/maps"), {

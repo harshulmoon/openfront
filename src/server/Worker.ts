@@ -68,13 +68,14 @@ export async function startWorker() {
   app.use(compression());
   app.use(express.json());
 
+  const webDir = path.join(process.cwd(), "static");
+
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
-  const gm = new GameManager(config, log);
-  const lobbyService = new WorkerLobbyService(server, wss, gm, log);
+ app.use(express.static(webDir));  // MUST be inside startWorker
 
-  // ...rest of your code
+  // ... all other app.use/app.get/app.post must stay inside this function ...
 }
   setTimeout(
     () => {
@@ -88,8 +89,6 @@ export async function startWorker() {
   }
 
   const webDir = path.join(process.cwd(), "static");
-  app.use(express.static(webDir));
-
 
   const privilegeRefresher = new PrivilegeRefresher(
     config.jwtIssuer() + "/cosmetics.json",

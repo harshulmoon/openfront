@@ -522,7 +522,6 @@ server.listen(PORT, "0.0.0.0", () => {
   process.on("unhandledRejection", (reason, promise) => {
     log.error(`unhandled rejection at:`, promise, "reason:", reason);
   });
-}
 
 async function startMatchmakingPolling(gm: GameManager) {
   startPolling(

@@ -62,33 +62,27 @@ export async function startWorker() {
     allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
   };
 
-  app.use(cors(corsOptions));
+   app.use(cors(corsOptions));
   app.options("*", cors(corsOptions));
 
   app.use(compression());
   app.use(express.json());
 
   const webDir = path.join(process.cwd(), "static");
+  app.use(express.static(webDir));
 
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
- app.use(express.static(webDir));  // MUST be inside startWorker
+  const gm = new GameManager(config, log);
 
-  // ... all other app.use/app.get/app.post must stay inside this function ...
-}
-  setTimeout(
-    () => {
-      startMatchmakingPolling(gm);
-    },
-    1000 + Math.random() * 2000,
-  );
+  setTimeout(() => {
+    startMatchmakingPolling(gm);
+  }, 1000 + Math.random() * 2000);
 
   if (config.otelEnabled()) {
     initWorkerMetrics(gm);
   }
-
-  const webDir = path.join(process.cwd(), "static");
 
   const privilegeRefresher = new PrivilegeRefresher(
     config.jwtIssuer() + "/cosmetics.json",

@@ -566,7 +566,6 @@ async function startMatchmakingPolling(gm: GameManager) {
         log.error(`Error polling lobby:`, error);
     };
     5000 + Math.random() * 1000,
-  );
 }
 
 // TODO: This is a hack to generate a game ID for the worker.

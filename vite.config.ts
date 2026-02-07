@@ -14,6 +14,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const isProduction = mode === "production";
   const apiDomain = process.env.API_DOMAIN ?? env.API_DOMAIN ?? "";
+  console.log("BUILD API_DOMAIN RAW =", process.env.API_DOMAIN);
+  console.log("BUILD API_DOMAIN USED =", apiDomain);
   console.log("BUILD API_DOMAIN =", apiDomain);
   const stripeKey =
     process.env.STRIPE_PUBLISHABLE_KEY ?? env.STRIPE_PUBLISHABLE_KEY ?? "";

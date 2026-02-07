@@ -92,11 +92,13 @@ export async function startMaster() {
 
   // Fork workers
   for (let i = 0; i < config.numWorkers(); i++) {
-    const worker = cluster.fork({
-      WORKER_ID: i,
-      ADMIN_TOKEN,
-      INSTANCE_ID,
-    });
+const worker = cluster.fork({
+  WORKER_ID: String(i),
+  WORKER_PORT: String(3001 + i),
+  ADMIN_TOKEN,
+  INSTANCE_ID,
+  GAME_ENV: process.env.GAME_ENV, // optional but good
+});
 
     lobbyService.registerWorker(i, worker);
     log.info(`Started worker ${i} (PID: ${worker.process.pid})`);
@@ -119,11 +121,13 @@ export async function startMaster() {
     log.info(`Restarting worker ${workerId}...`);
 
     // Restart the worker with the same ID
-    const newWorker = cluster.fork({
-      WORKER_ID: workerId,
-      ADMIN_TOKEN,
-      INSTANCE_ID,
-    });
+const newWorker = cluster.fork({
+  WORKER_ID: String(workerId),
+  WORKER_PORT: String(3001 + Number(workerId)),
+  ADMIN_TOKEN,
+  INSTANCE_ID,
+  GAME_ENV: process.env.GAME_ENV, // optional but good
+});
 
     lobbyService.registerWorker(workerIdNum, newWorker);
     log.info(

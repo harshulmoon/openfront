@@ -62,19 +62,27 @@ export async function startWorker() {
     allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
   };
 
+const webDir = path.join(process.cwd(), "static");
+
+log.info(`webDir=${webDir}`);
+log.info(`web index exists=${fs.existsSync(path.join(webDir, "index.html"))}`);
+
+app.use(express.static(webDir));
+
    app.use(cors(corsOptions));
   app.options("*", cors(corsOptions));
 
   app.use(compression());
   app.use(express.json());
 
-  const webDir = path.join(process.cwd(), "static");
   app.use(express.static(webDir));
 
   const server = http.createServer(app);
   const wss = new WebSocketServer({ noServer: true });
 
   const gm = new GameManager(config, log);
+
+  const lobbyService = new WorkerLobbyService(server, wss, gm, log);
 
   setTimeout(() => {
     startMatchmakingPolling(gm);
@@ -124,12 +132,6 @@ app.use(express.static(webDir));
 // ...
 
 log.info(`CWD=${process.cwd()}`);
-log.info(`distDir=${distDir}`);
-log.info(`dist exists=${fs.existsSync(distDir)}`);
-log.info(`dist index exists=${fs.existsSync(path.join(distDir, "index.html"))}`);
-
-// Serve built Vite output
-app.use(express.static(distDir));
 
 // Serve maps (must come before SPA fallback)
 app.use(
@@ -149,8 +151,6 @@ app.use(
       max: 20, // 20 requests per IP per second
     }),
   );
-
-  const distDir = path.join(__dirname, "../../dist"); // -> /app/dist when running from /app/src/server
 
   app.post("/api/create_game/:id", async (req, res) => {
     const id = req.params.id;
@@ -497,6 +497,10 @@ server.listen(PORT, "0.0.0.0", () => {
   });
 
    // SPA fallback (must be before the global error handler
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/maps")) return next();
+  return res.sendFile(path.join(webDir, "index.html"));
+});
   
   // Global error handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -509,56 +513,16 @@ server.listen(PORT, "0.0.0.0", () => {
     log.error(`uncaught exception:`, err);
   });
 
-  process.on("unhandledRejection", (reason, promise) => {
-    log.error(`unhandled rejection at:`, promise, "reason:", reason);
-  });
+process.on("unhandledRejection", (reason, promise) => {
+  log.error(`unhandled rejection at:`, promise, "reason:", reason);
+});
+} // <-- END startWorker()
 
 async function startMatchmakingPolling(gm: GameManager) {
   startPolling(
     async () => {
       try {
-        const url = `${config.jwtIssuer()}/matchmaking/checkin`;
-        const gameId = generateGameIdForWorker();
-        if (gameId === null) {
-          log.warn(`Failed to generate game ID for worker ${workerId}`);
-          return;
-        }
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": config.apiKey(),
-          },
-          body: JSON.stringify({
-            id: workerId,
-            gameId,
-            ccu: gm.activeClients(),
-            instanceId: process.env.INSTANCE_ID,
-          }),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          log.warn(
-            `Failed to poll lobby: ${response.status} ${response.statusText}`,
-          );
-          return;
-        }
-
-        const data = await response.json();
-        log.info(`Lobby poll successful:`, data);
-
-        if (data.assignment) {
-          const gameConfig = playlist.get1v1Config();
-          const game = gm.createGame(gameId, gameConfig);
-          setTimeout(() => game.start(), 7000);
-        }
+        // ...
       } catch (error) {
         log.error(`Error polling lobby:`, error);
       }
@@ -566,6 +530,7 @@ async function startMatchmakingPolling(gm: GameManager) {
     5000 + Math.random() * 1000,
   );
 }
+
 // TODO: This is a hack to generate a game ID for the worker.
 // It should be replaced with a more robust solution.
 function generateGameIdForWorker(): GameID | null {

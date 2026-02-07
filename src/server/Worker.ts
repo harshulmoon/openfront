@@ -497,7 +497,12 @@ server.listen(PORT, "0.0.0.0", () => {
   });
 
    // SPA fallback (must be before the global error handler
+app.get("/cosmetics.json", (req, res) => {
+  res.type("application/json").send("{}");
+});
 app.get("*", (req, res, next) => {
+  if (path.extname(req.path)) return next(); // <-- important (.json/.js/.css etc)
+
   if (req.path.startsWith("/api") || req.path.startsWith("/maps")) return next();
   return res.sendFile(path.join(webDir, "index.html"));
 });

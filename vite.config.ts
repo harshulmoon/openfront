@@ -13,6 +13,9 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const isProduction = mode === "production";
+  const apiDomain = process.env.API_DOMAIN ?? env.API_DOMAIN ?? "";
+  const stripeKey =
+    process.env.STRIPE_PUBLISHABLE_KEY ?? env.STRIPE_PUBLISHABLE_KEY ?? "";
   // In dev, redirect visits to /w*/game/* to "/" so Vite serves the index.html.
   const devGameHtmlBypass = (req?: {
     url?: string;
@@ -80,16 +83,13 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
     ],
 
-    define: {
+define: {
       "process.env.WEBSOCKET_URL": JSON.stringify(
         isProduction ? "" : "localhost:3000",
       ),
       "process.env.GAME_ENV": JSON.stringify(isProduction ? "prod" : "dev"),
-      "process.env.STRIPE_PUBLISHABLE_KEY": JSON.stringify(
-        env.STRIPE_PUBLISHABLE_KEY,
-      ),
-      "process.env.API_DOMAIN": JSON.stringify(env.API_DOMAIN),
-      // Add other process.env variables if needed, OR migrate code to import.meta.env
+      "process.env.STRIPE_PUBLISHABLE_KEY": JSON.stringify(stripeKey),
+      "process.env.API_DOMAIN": JSON.stringify(apiDomain),
     },
 
     build: {

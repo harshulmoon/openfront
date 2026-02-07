@@ -535,7 +535,7 @@ async function startMatchmakingPolling(gm: GameManager) {
           },
           body: JSON.stringify({
             id: workerId,
-            gameId: gameId,
+            gameId,
             ccu: gm.activeClients(),
             instanceId: process.env.INSTANCE_ID,
           }),
@@ -545,8 +545,11 @@ async function startMatchmakingPolling(gm: GameManager) {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          log.warn(`Failed to poll lobby: ${response.status} ${response.statusText}`);
+          log.warn(
+            `Failed to poll lobby: ${response.status} ${response.statusText}`,
+          );
           return;
+        }
 
         const data = await response.json();
         log.info(`Lobby poll successful:`, data);

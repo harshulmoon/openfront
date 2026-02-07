@@ -487,7 +487,7 @@ app.use(
   });
 
   // The load balancer will handle routing to this server based on path
-  const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.WORKER_PORT) || (3001 + workerId);
 server.listen(PORT, "0.0.0.0", () => {
     log.info(`running on http://localhost:${PORT}`);
     log.info(`Handling requests with path prefix /w${workerId}/`);

@@ -87,9 +87,7 @@ export default defineConfig(({ mode }) => {
     ],
 
 define: {
-      "process.env.WEBSOCKET_URL": JSON.stringify(
-        isProduction ? "" : "localhost:3000",
-      ),
+"process.env.WEBSOCKET_URL": JSON.stringify(apiDomain),
       "process.env.GAME_ENV": JSON.stringify(isProduction ? "prod" : "dev"),
       "process.env.STRIPE_PUBLISHABLE_KEY": JSON.stringify(stripeKey),
       "process.env.API_DOMAIN": JSON.stringify(apiDomain),

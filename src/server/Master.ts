@@ -134,10 +134,26 @@ const newWorker = cluster.fork({
       `Restarted worker ${workerId} (New PID: ${newWorker.process.pid})`,
     );
   });
+const wss = new WebSocketServer({ noServer: true });
+
+server.on("upgrade", (req, socket, head) => {
+  if (req.url?.startsWith("/lobbies")) {
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      wss.emit("connection", ws, req);
+    });
+    return;
+  }
+  socket.destroy();
+});
 
 const port = Number(process.env.PORT) || 3000;
 server.listen(port, "0.0.0.0", () => {
   console.log(`Master HTTP server listening on port ${port}`);
+});
+
+wss.on("connection", (ws, req) => {
+  console.log("LOBBIES WS CONNECTED", req.url);
+  ws.send(JSON.stringify({ type: "hello" }));
 });
   
 app.get("/api/env", async (req, res) => {
